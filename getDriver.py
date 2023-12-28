@@ -19,6 +19,8 @@ def get_version_via_com(filename):
     versions = jsonDic['versions']
 
     version = version[:3]
+    
+    # gad
 
 
     for item in versions:
