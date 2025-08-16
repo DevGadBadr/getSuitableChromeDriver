@@ -1,7 +1,20 @@
-This ``getDriver.py`` file can be used to automatically install the compatible
-Chrome/Chromium driver for Selenium projects.
+# getSuitableChromeDriver
 
-The script now works on both **Windows** and **Linux** machines.  It determines
-the installed browser's major version and downloads the corresponding
-``chromedriver`` executable for the current platform, helping avoid the common
-issue of mismatched browser and driver versions.
+`getDriver.py` automatically downloads a ChromeDriver binary that matches the installed Chrome/Chromium browser. It works on Windows and Linux, removing common version mismatch issues in Selenium projects.
+
+## Usage
+
+Run the script from the command line:
+
+```bash
+python getDriver.py
+```
+
+Or call it from Python code:
+
+```python
+from getDriver import getChromeDriver
+getChromeDriver()
+```
+
+The appropriate `chromedriver` executable is saved to the current directory if it isn't already present.
