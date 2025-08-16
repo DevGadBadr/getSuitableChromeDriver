@@ -4,7 +4,6 @@ import requests
 import json
 import zipfile
 import os
-import os
 import shutil
 
 def get_version_via_com(filename):
@@ -14,20 +13,28 @@ def get_version_via_com(filename):
     except Exception:
         return None
         
-    jsondata = requests.get('https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json')
+    jsondata = requests.get(
+        "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json"
+    )
     jsonDic = json.loads(jsondata.text)
     versions = jsonDic['versions']
 
-    version = version[:3]
-    
-    # gad
+    # Only keep the major version (e.g. 116 from 116.0.5845.96)
+    major_version = version.split(".")[0]
 
-
+    download_url = None
     for item in versions:
-        if item['version'][:3] == version:
-            actual_version = version
-            download_url = item['downloads']['chromedriver'][4]['url']
-            break
+        # Match the version by its major number
+        if item["version"].startswith(major_version):
+            # Find the Windows 64-bit download entry instead of assuming index 4
+            for download in item["downloads"]["chromedriver"]:
+                if download["platform"] == "win64":
+                    download_url = download["url"]
+                    break
+            if download_url:
+                break
+    if not download_url:
+        return None
 
     latest_driver_zip = wget.download(download_url,'chromedriver.zip')
     with zipfile.ZipFile(latest_driver_zip, 'r') as zip_ref:
@@ -37,16 +44,28 @@ def get_version_via_com(filename):
 
     shutil.move("./chromedriver-win64/chromedriver.exe", "./chromedriver.exe")
 
-    return version
+    return major_version
 
 def getChromeDriver():
-    content = os.listdir()
-    if 'chromedriver.exe' in content:
-        pass
-    else:
-        paths = [r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-                    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"]
-        version = list(filter(None, [get_version_via_com(p) for p in paths]))[0]
-        print(version)
-        get_version_via_com(version)
+    """Ensure a matching chromedriver is available.
+
+    If ``chromedriver.exe`` is not present in the current directory, this
+    function tries known Chrome installation paths and downloads the
+    corresponding driver for the first path that exists.
+    """
+
+    if "chromedriver.exe" in os.listdir():
+        return
+
+    paths = [
+        r"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+        r"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+    ]
+    for path in paths:
+        version = get_version_via_com(path)
+        if version:
+            print(version)
+            return
+
+    raise FileNotFoundError("Google Chrome not found in default locations")
 
